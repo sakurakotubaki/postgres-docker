@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 出版社テーブル（第3正規化）
+model Publisher {
+  publisher_id      Int     @id @default(autoincrement())
+  publisher_name    String  @unique @db.VarChar(50)
+  publisher_address String? @db.VarChar(100)
+  books             Book[]
+
+  @@map("publishers_3nf")
+}
+
+// 書籍テーブル（第3正規化）
+model Book {
+  book_title   String        @id @db.VarChar(100)
+  book_price   Int?
+  publisher_id Int?
+  publisher    Publisher?    @relation(fields: [publisher_id], references: [publisher_id])
+  orderDetails OrderDetail[]
+
+  @@map("books_3nf")
+}
+
+// 注文テーブル（第3正規化）
+model Order {
+  order_id       String        @id @db.VarChar(10)
+  order_date     DateTime?     @db.Date
+  customer_name  String?       @db.VarChar(50)
+  customer_email String?       @db.VarChar(50)
+  orderDetails   OrderDetail[]
+
+  @@map("orders_3nf")
+}
+
+// 注文詳細テーブル（第3正規化）
+model OrderDetail {
+  order_id   String @db.VarChar(10)
+  book_title String @db.VarChar(100)
+  quantity   Int?
+  order      Order  @relation(fields: [order_id], references: [order_id])
+  book       Book   @relation(fields: [book_title], references: [book_title])
+
+  @@id([order_id, book_title])
+  @@map("order_details_3nf")
+}
